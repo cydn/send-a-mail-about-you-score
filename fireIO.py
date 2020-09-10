@@ -8,44 +8,54 @@ import smtplib
 from email.mime.text import MIMEText
 from email.utils import formataddr
 
-my_sender = '1367744830@qq.com'  # 发件人邮箱账号
-my_pass = 'zozcxxzqexafgdfj'  # 发件人序列号（激活码？）总之不是邮箱密码
+
+my_sender = ''  # 发件人邮箱账号
+
 my_user = []
+result = []
+namelist = []
 contents = []
 
 wb = openpyxl.load_workbook('try-xlsxIO.xlsx')
 ws = wb.active
 
-###############################################此处须有修改#################################################
-for each_row in ws.iter_rows(min_row=2, min_col=2, max_row=3, max_col=2):  # 若有n个学生，将max_row改为n+1
-    my_user.append(each_row[0].value)
+stu_num = ws.max_row
 
-################################################此处须有修改#################################################
-for each_row in ws.iter_rows(min_row=2, min_col=3, max_row=3, max_col=3):  # 若有n个学生，将max_row改为n+1
-    contents.append('你的期中考试成绩是'+str(each_row[0].value)+'分')
+ #get users' adress
+for each_row in ws.iter_rows(min_row=2, min_col=2, max_row=stu_num, max_col=2):
+    my_user.append(each_row[0].value+"@shanghaitech.edu.cn")
+
+#get students' name
+for each_row in ws.iter_rows(min_row=2, min_col=1, max_row=stu_num, max_col=1):
+    namelist.append(str(each_row[0].value))
+
+#content input
+for i in range(0,stu_num-1):
+    contents.append(
+"""{name}
+""".format(name=namelist[i]))
 
 
-def mail(k, contains):
+def mail(k, contents):
     ret = True
     try:
-        msg = MIMEText(contains, 'plain', 'utf-8')
-        msg['From'] = formataddr(["From TC", my_sender])
-        msg['To'] = formataddr(["   ", my_user[k]])
-        msg['Subject'] = "试一试用python群发邮件"
+        msg = MIMEText(contents, 'plain', 'utf-8')
+        msg['From'] = formataddr(["", my_sender])
+        msg['Subject'] = ""
 
-        server = smtplib.SMTP_SSL("smtp.qq.com", 465)
-        server.login(my_sender, my_pass)
+        server = smtplib.SMTP("smtp.shanghaitech.edu.cn", 25)
+        server.set_debuglevel(1)
         server.sendmail(my_sender, [my_user[k], ], msg.as_string())
         server.quit()
+       
     except Exception:
         ret = False
     return ret
-
-
 ######################请将（0，2）处的2更改为学生总数##############################
-for i in range(0, 2):
+for i in range(0, stu_num-1):
     ret = mail(i, contents[i])
-    if ret:
+    if ret == True:
         print("邮件发送成功")
     else:
-        print("邮件发送失败")
+        print(str(i)+"号邮件发送失败")
+
